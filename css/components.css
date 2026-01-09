@@ -1,0 +1,365 @@
+/* ========================================
+   COMPONENTS
+   Buttons, inputs, modals, icons
+   ======================================== */
+
+/* === MESSAGE TEXT === */
+.message {
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    margin-bottom: 2rem;
+    font-weight: 300;
+    will-change: opacity, transform; /* hint for Chrome animation optimization */
+    transform: translateZ(0); /* force GPU layer */
+    /* Prevent text selection on all messages */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none; /* prevent iOS callout on long-press */
+    cursor: default;
+    /* 2025 Mobile Chrome fixes - prevent flicker deletion */
+    position: relative; /* explicit positioning for fixed elements without coords */
+    -webkit-perspective: 1000px; /* force GPU layer pinning */
+    perspective: 1000px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    isolation: isolate; /* stacking context isolation */
+    /* 2025 Chrome "Containment" fix - forces independent render block */
+    contain: layout; /* Chrome treats this as independent, won't wait for other modules */
+}
+
+.message.visible { opacity: 1; }
+.message.fading { opacity: 0; }
+
+/* === INPUT WRAPPER === */
+.input-wrapper {
+    position: relative;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    margin-bottom: 2rem;
+}
+
+.input-wrapper.visible { opacity: 1; }
+.input-wrapper.fading { opacity: 0; }
+
+.mist-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(200, 180, 220, 0.12), transparent 60%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    filter: blur(30px);
+}
+
+.input-wrapper:focus-within .mist-glow {
+    opacity: 1;
+    animation: gentle-pulse 4s ease-in-out infinite;
+}
+
+/* === ENTRY FIELD === */
+.entry-field {
+    width: 100%;
+    background: rgba(200, 180, 220, 0.01);
+    border: 1px solid rgba(200, 180, 220, 0.12);
+    border-radius: 12px;
+    color: rgba(232, 212, 240, 0.85);
+    font-family: 'Georgia', serif;
+    font-size: 1.5rem;
+    padding: 20px 15px;
+    text-align: center;
+    outline: none;
+    transition: all 0.5s ease;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(200, 180, 220, 0.3);
+    position: relative;
+    z-index: 2;
+    /* Chrome mobile: disable word underline during typing */
+    -webkit-text-decoration: none;
+    text-decoration: none;
+    text-decoration-skip-ink: none;
+}
+
+.entry-field:focus {
+    background: rgba(200, 180, 220, 0.02);
+    border-color: rgba(200, 180, 220, 0.25);
+    color: rgba(232, 212, 240, 0.95);
+    text-shadow: 0 0 12px rgba(200, 180, 220, 0.5);
+    animation: breathe 4s ease-in-out infinite;
+}
+
+.entry-field::placeholder { color: rgba(200, 180, 220, 0.25); }
+
+.entry-field.text-fading {
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+/* === PEN ICON === */
+.pen-icon {
+    position: absolute;
+    right: 50%;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 20px;
+    height: 20px;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.3s ease;
+}
+
+.entry-field:focus + .pen-icon { opacity: 0; }
+.entry-field:not(:placeholder-shown) + .pen-icon { opacity: 0; }
+
+/* === BUTTON GROUP === */
+.button-group {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 1.5rem;
+    opacity: 1;
+    transition: opacity 1.5s ease;
+}
+
+/* === CHOICE BUTTON === */
+.choice-button {
+    padding: 15px 45px;
+    background: rgba(200, 180, 220, 0.1);
+    border: 1px solid rgba(200, 180, 220, 0.3);
+    color: #e8d4f0;
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+    border-radius: 8px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative; /* ensure clickable above siblings */
+    z-index: 1; /* prevent dead zone from stacking context issues */
+    transform: translateZ(0); /* force GPU layer - fixes click dead zones */
+}
+
+.choice-button:hover {
+    background: rgba(200, 180, 220, 0.15);
+    border-color: rgba(200, 180, 220, 0.4);
+}
+
+.choice-button:active {
+    transform: scale(1.08);
+    background: rgba(200, 180, 220, 0.2);
+}
+
+/* === BACK BUTTON === */
+.back-button {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    padding: 12px 24px;
+    background: rgba(200, 180, 220, 0.08);
+    border: 1px solid rgba(200, 180, 220, 0.25);
+    border-radius: 10px;
+    color: #e8d4f0;
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+    z-index: 31;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transform: translateZ(0); /* force GPU layer - fixes click dead zones */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+@media (min-width: 769px) {
+    .back-button.input-focused {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .back-button.input-focused {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+}
+
+.back-button:hover {
+    background: rgba(200, 180, 220, 0.15);
+    border-color: rgba(200, 180, 220, 0.4);
+}
+
+.back-button:active {
+    transform: scale(1.08);
+    background: rgba(200, 180, 220, 0.2);
+}
+
+/* === HELP ICON === */
+.help-icon {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    background: rgba(200, 180, 220, 0.15);
+    border: 1px solid rgba(200, 180, 220, 0.25);
+    border-radius: 50%;
+    color: #e8d4f0;
+    font-family: 'Georgia', serif;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    opacity: 0;
+    transform: translateZ(0); /* force GPU layer - fixes click dead zones */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.help-icon.visible { opacity: 1; }
+
+.help-icon:hover {
+    background: rgba(200, 180, 220, 0.25);
+    border-color: rgba(200, 180, 220, 0.4);
+    box-shadow: 0 0 15px rgba(210, 190, 230, 0.3);
+}
+
+.help-icon:active { transform: scale(1.1); }
+
+/* === ENVELOPE HELPER === */
+.envelope-helper {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    background: rgba(200, 180, 220, 0.15);
+    border: 1px solid rgba(200, 180, 220, 0.25);
+    border-radius: 50%;
+    color: #e8d4f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 26;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateZ(0); /* force GPU layer - fixes click dead zones */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.envelope-helper.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.envelope-helper:hover {
+    background: rgba(200, 180, 220, 0.25);
+    border-color: rgba(200, 180, 220, 0.4);
+    box-shadow: 0 0 15px rgba(210, 190, 230, 0.3);
+}
+
+.envelope-helper.blurping {
+    animation: blurp 0.4s ease-out 2;
+}
+
+/* === HELP MODAL === */
+.help-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 1s ease;
+    pointer-events: none;
+}
+
+.help-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.help-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 320px;
+    background: rgba(26, 10, 26, 0.95);
+    border: 1px solid rgba(200, 180, 220, 0.3);
+    border-radius: 12px;
+    padding: 30px;
+    z-index: 35;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(200, 180, 220, 0.2);
+}
+
+.help-modal.visible { opacity: 1; }
+
+.help-modal-text {
+    color: #e8d4f0;
+    font-size: 1rem;
+    line-height: 1.6;
+    letter-spacing: 1px;
+}
+
+.help-modal-text em {
+    font-style: italic;
+    color: rgba(232, 212, 240, 0.9);
+    text-shadow: 0 0 8px rgba(200, 180, 220, 0.4);
+}
+
+/* === PLACEHOLDER SCREEN === */
+.placeholder-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #1a0a1a, #2d1a3d, #3a2845);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.placeholder-screen.visible { opacity: 1; }
+
+.placeholder-text {
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    color: #e8d4f0;
+    margin-bottom: 3rem;
+    opacity: 0.7;
+    padding: 0 20px;
+    text-align: center;
+}

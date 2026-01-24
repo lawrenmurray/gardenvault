@@ -1,0 +1,581 @@
+/* ========================================
+   WHISPER SECTION
+   Whisper container, textarea, seed, rings
+   ======================================== */
+
+/* === WHISPER CONTAINER === */
+.whisper-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    transition: none;
+    will-change: transform; /* prevent CLS during load */
+    backface-visibility: hidden; /* force GPU layer for stable positioning */
+    -webkit-backface-visibility: hidden;
+}
+
+@media (max-width: 768px) {
+    .whisper-container {
+        transition: top 0.3s ease, transform 0.3s ease;
+    }
+
+    .whisper-container.input-focused {
+        top: 30%;
+    }
+}
+
+@media (min-width: 769px) {
+    .whisper-container.input-focused {
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* === WHISPER PROMPT === */
+.whisper-prompt {
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.4s ease, filter 0.4s ease;
+    font-weight: 300;
+    color: #e8d4f0;
+    /* Prevent text selection */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    cursor: default;
+}
+
+.whisper-prompt.visible { opacity: 1; }
+
+/* Curtain blur - applied via intersection observer when prompt reaches top zone (mobile only) */
+@media (max-width: 768px) {
+    .whisper-prompt.curtain-blur {
+        opacity: 0;
+        filter: blur(4px);
+    }
+}
+
+/* === WHISPER INPUT WRAPPER === */
+.whisper-input-wrapper {
+    position: relative;
+    width: 100%;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+
+.whisper-input-wrapper.visible { opacity: 1; }
+
+.whisper-glow-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(200, 180, 220, 0.12), transparent 60%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    filter: blur(30px);
+}
+
+.whisper-input-wrapper:focus-within .whisper-glow-bg {
+    opacity: 1;
+    animation: gentle-pulse 4s ease-in-out infinite;
+}
+
+/* === WHISPER TEXTAREA === */
+.whisper-textarea {
+    width: 100%;
+    position: relative;
+    background: rgba(200, 180, 220, 0.01);
+    border: 1px solid rgba(200, 180, 220, 0.12);
+    border-radius: 12px;
+    color: #e8d4f0;
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    padding: 16px 50px;
+    text-align: center;
+    outline: none;
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.4s ease,
+                border-color 0.4s ease,
+                box-shadow 0.4s ease;
+    letter-spacing: 0.5px;
+    z-index: 2;
+    resize: none;
+    min-height: 52px;
+    max-height: 234px; /* ~8 lines */
+    overflow-y: auto;
+    line-height: 1.5;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    /* Chrome mobile: disable word underline during typing */
+    -webkit-text-decoration: none;
+    text-decoration: none;
+    text-decoration-skip-ink: none;
+}
+
+.whisper-textarea::-webkit-scrollbar { display: none; }
+
+.whisper-textarea:focus {
+    background: rgba(200, 180, 220, 0.02);
+    border-color: rgba(200, 180, 220, 0.25);
+    animation: breathe 4s ease-in-out infinite;
+}
+
+.whisper-textarea::placeholder {
+    color: rgba(200, 180, 220, 0.25);
+    font-style: italic;
+}
+
+/* === ENVELOPE ICON === */
+.envelope-icon {
+    position: absolute;
+    right: 50%;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 20px;
+    height: 20px;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.envelope-icon.awakening {
+    animation: shake-blur 0.3s ease-out 3;
+}
+
+.whisper-textarea:focus + .envelope-icon { opacity: 0; }
+.whisper-textarea:not(:placeholder-shown) + .envelope-icon { opacity: 0; }
+
+/* === PLUS BUTTON (timing dropdown trigger) === */
+.plus-button {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    background: rgba(200, 180, 220, 0.08);
+    border: 1px solid rgba(200, 180, 220, 0.2);
+    border-radius: 8px;
+    color: #e8d4f0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    z-index: 3;
+}
+
+.plus-button:hover {
+    background: rgba(200, 180, 220, 0.12);
+    border-color: rgba(200, 180, 220, 0.3);
+}
+
+.plus-button:active { transform: translateY(-50%) scale(0.92); }
+
+/* === TIMING DROPDOWN === */
+.timing-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: rgba(26, 10, 26, 0.95);
+    border: 1px solid rgba(200, 180, 220, 0.25);
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 150;
+    min-width: 80px;
+}
+
+.timing-dropdown.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.timing-option {
+    padding: 10px 16px;
+    color: #e8d4f0;
+    font-family: 'Georgia', serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.timing-option:hover { background: rgba(200, 180, 220, 0.1); }
+
+.timing-option.active {
+    background: rgba(200, 180, 220, 0.15);
+    border: 1px solid rgba(200, 180, 220, 0.3);
+}
+
+/* === SEND ARROW === */
+.send-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    background: rgba(200, 180, 220, 0.15);
+    border: 1px solid rgba(200, 180, 220, 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.send-arrow.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.send-arrow:hover {
+    background: rgba(200, 180, 220, 0.25);
+    border-color: rgba(200, 180, 220, 0.4);
+}
+
+.send-arrow:active { transform: translateY(-50%) scale(0.92); }
+
+.send-arrow svg {
+    width: 14px;
+    height: 14px;
+    fill: rgba(200, 180, 220, 0.9);
+}
+
+/* === SEED CONTAINER === */
+.seed-container {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    min-height: 180px;
+    pointer-events: none;
+    transition: opacity 1.5s ease, top 0.3s ease;
+    z-index: 24;
+}
+
+@media (min-width: 769px) {
+    .seed-container {
+        top: calc(50% + 180px);
+    }
+}
+
+@media (max-width: 768px) {
+    .seed-container {
+        top: calc(50% + 150px);
+    }
+
+    .seed-container.input-focused {
+        top: calc(30% + 150px);
+    }
+}
+
+.seed-container.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* === SEED WRAPPER === */
+.seed-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    cursor: default;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.seed-wrapper.clickable {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.seed-wrapper.clickable:hover {
+    transform: scale(1.04);
+}
+
+.seed-wrapper.clickable:active {
+    transform: scale(0.98);
+}
+
+/* === SEED SVG === */
+.seed-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 4px 12px rgba(200, 180, 220, 0.2));
+    transition: all 0.5s ease;
+}
+
+.seed-wrapper.breathing .seed-svg {
+    animation: seed-breathe var(--breathe-speed, 4s) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.full-bloom .seed-svg {
+    animation: seed-heartbeat 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* === MULTI-LAYER GLOW SYSTEM === */
+.seed-glow-layer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Layer 1: Core glow - tight, bright */
+.seed-glow-core {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle,
+        rgba(230, 215, 245, 0.4) 0%,
+        rgba(200, 180, 220, 0.2) 40%,
+        transparent 70%
+    );
+    filter: blur(8px);
+    z-index: 1;
+}
+
+/* Layer 2: Inner glow - medium spread */
+.seed-glow-inner {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle,
+        rgba(210, 190, 230, 0.25) 0%,
+        rgba(180, 160, 210, 0.1) 50%,
+        transparent 70%
+    );
+    filter: blur(15px);
+    z-index: 0;
+}
+
+/* Layer 3: Outer glow - wide ambient */
+.seed-glow-outer {
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle,
+        rgba(200, 180, 220, 0.15) 0%,
+        rgba(160, 140, 190, 0.05) 60%,
+        transparent 80%
+    );
+    filter: blur(25px);
+    z-index: -1;
+}
+
+/* Layer 4: Atmosphere - very wide, subtle */
+.seed-glow-atmosphere {
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle,
+        rgba(180, 160, 210, 0.08) 0%,
+        rgba(140, 120, 170, 0.02) 70%,
+        transparent 90%
+    );
+    filter: blur(35px);
+    z-index: -2;
+}
+
+/* === GLOW STATE: DORMANT === */
+.seed-wrapper.dormant .seed-glow-core,
+.seed-wrapper.dormant .seed-glow-inner,
+.seed-wrapper.dormant .seed-glow-outer,
+.seed-wrapper.dormant .seed-glow-atmosphere {
+    opacity: 0;
+}
+
+/* === GLOW STATE: AWAKENING === */
+.seed-wrapper.awakening .seed-glow-core {
+    opacity: 0.6;
+    animation: glow-core-awaken 2s ease-out forwards;
+}
+
+.seed-wrapper.awakening .seed-glow-inner {
+    opacity: 0.4;
+    animation: glow-inner-awaken 2.2s ease-out forwards;
+}
+
+.seed-wrapper.awakening .seed-glow-outer {
+    opacity: 0.3;
+    animation: glow-outer-awaken 2.5s ease-out forwards;
+}
+
+.seed-wrapper.awakening .seed-glow-atmosphere {
+    opacity: 0.2;
+    animation: glow-atmosphere-awaken 3s ease-out forwards;
+}
+
+/* === GLOW STATE: BREATHING === */
+.seed-wrapper.breathing .seed-glow-core {
+    opacity: 0.7;
+    animation: glow-core-breathe 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.breathing .seed-glow-inner {
+    opacity: 0.5;
+    animation: glow-inner-breathe 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.breathing .seed-glow-outer {
+    opacity: 0.4;
+    animation: glow-outer-breathe 4.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.breathing .seed-glow-atmosphere {
+    opacity: 0.25;
+    animation: glow-atmosphere-breathe 5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* === GLOW STATE: FULL-BLOOM === */
+.seed-wrapper.full-bloom .seed-glow-core {
+    width: 80px;
+    height: 80px;
+    opacity: 0.9;
+    background: radial-gradient(circle,
+        rgba(240, 230, 250, 0.6) 0%,
+        rgba(210, 190, 230, 0.3) 40%,
+        transparent 70%
+    );
+    animation: glow-core-bloom 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.full-bloom .seed-glow-inner {
+    width: 130px;
+    height: 130px;
+    opacity: 0.7;
+    animation: glow-inner-bloom 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.full-bloom .seed-glow-outer {
+    width: 200px;
+    height: 200px;
+    opacity: 0.5;
+    animation: glow-outer-bloom 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.seed-wrapper.full-bloom .seed-glow-atmosphere {
+    width: 280px;
+    height: 280px;
+    opacity: 0.35;
+    animation: glow-atmosphere-bloom 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* === GLOW STATE: ABSORBING === */
+.seed-wrapper.absorbing .seed-glow-core {
+    animation: glow-absorb-pulse 0.6s ease-in-out infinite;
+}
+
+.seed-wrapper.absorbing .seed-glow-inner {
+    animation: glow-absorb-contract 1s ease-in forwards;
+}
+
+.seed-wrapper.absorbing .seed-glow-outer {
+    animation: glow-absorb-contract 1.2s ease-in forwards;
+}
+
+.seed-wrapper.absorbing .seed-glow-atmosphere {
+    animation: glow-absorb-contract 1.5s ease-in forwards;
+}
+
+/* === GLOW STATE: SENDING === */
+.seed-wrapper.sending .seed-glow-core {
+    animation: send-gather-core 3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seed-wrapper.sending .seed-glow-inner {
+    animation: send-gather-inner 3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.seed-wrapper.sending .seed-glow-outer {
+    animation: send-gather-outer 3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+}
+
+.seed-wrapper.sending .seed-glow-atmosphere {
+    animation: send-gather-atmosphere 3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+}
+
+/* === RING GLOW (compatibility) === */
+.ring-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.8s ease;
+    filter: blur(20px);
+}
+
+.seed-wrapper.breathing .ring-glow {
+    animation: ring-pulse 3s ease-in-out infinite;
+}
+
+/* === CIRCLE TEXT === */
+.circle-text-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+}
+
+.circle-text-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.circle-text {
+    fill: rgba(200, 180, 220, 0.85);
+    font-family: 'Georgia', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-shadow: 0 0 4px rgba(200, 180, 220, 0.3);
+}
+
+.ring-circle {
+    stroke-opacity: 0;
+    fill: none;
+}

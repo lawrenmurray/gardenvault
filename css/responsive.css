@@ -1,0 +1,30 @@
+/* ========================================
+   RESPONSIVE
+   Mobile responsive overrides
+   ======================================== */
+
+@media (max-width: 768px) {
+    .message { font-size: 1.1rem; }
+    .entry-field { font-size: 1.2rem; padding: 16px 12px; }
+    .menu-option { font-size: 1.1rem; padding: 20px 30px; }
+    .choice-button { padding: 12px 35px; font-size: 1rem; }
+    .back-button { top: 20px; left: 20px; padding: 10px 20px; font-size: 0.95rem; }
+    .help-icon { bottom: 20px; right: 20px; width: 36px; height: 36px; font-size: 16px; }
+    .envelope-helper { bottom: 20px; right: 20px; width: 36px; height: 36px; }
+    .help-modal { padding: 25px; max-width: 280px; }
+    .help-modal-text { font-size: 0.95rem; }
+    .whisper-prompt { font-size: 1.1rem; }
+    .whisper-textarea { font-size: 1rem; padding: 14px 45px; }
+    .plus-button { width: 26px; height: 26px; font-size: 1rem; left: 10px; }
+    .envelope-icon { width: 18px; height: 18px; }
+    .send-arrow { width: 26px; height: 26px; right: 10px; }
+    .send-arrow svg { width: 12px; height: 12px; }
+    .seed-wrapper { width: 120px; height: 120px; }
+    .circle-text { font-size: 0.85rem; letter-spacing: 1.5px; }
+
+    /* Scale down glow layers on mobile */
+    .seed-glow-core { width: 50px; height: 50px; }
+    .seed-glow-inner { width: 80px; height: 80px; }
+    .seed-glow-outer { width: 130px; height: 130px; }
+    .seed-glow-atmosphere { width: 180px; height: 180px; }
+}

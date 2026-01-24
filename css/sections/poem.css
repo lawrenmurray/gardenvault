@@ -1,0 +1,978 @@
+/* ========================================
+   POEM SECTION
+   Book, pages, ink effects, pending state styles
+   ======================================== */
+
+/* === CSS VARIABLES === */
+:root {
+    --ink-wet: rgba(45, 28, 20, 0.95);
+    --ink-drying: rgba(61, 40, 28, 0.88);
+    --ink-dry: rgba(92, 64, 51, 0.82);
+    --paper-cream: #f5ead6;
+    --paper-shadow: #e8dcc4;
+}
+
+/* === POEM CONTAINER === */
+.poem-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 700px;
+    text-align: center;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    transition: none;
+    perspective: 1200px;
+    will-change: transform; /* prevent CLS during load */
+    backface-visibility: hidden; /* force GPU layer for stable positioning */
+    -webkit-backface-visibility: hidden;
+}
+
+@media (max-width: 768px) {
+    .poem-container {
+        transition: top 0.3s ease, transform 0.3s ease;
+    }
+
+    /* When keyboard active, JS will set --keyboard-center-top */
+    .poem-container.input-focused {
+        top: var(--keyboard-center-top, 30%);
+    }
+}
+
+/* === POEM PROMPT (positioned below closed book) === */
+.poem-prompt {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+    color: rgba(200, 180, 220, 0.7);
+    letter-spacing: 2px;
+    white-space: nowrap;
+    opacity: 0;
+    animation: prompt-fade 3s ease-in-out infinite;
+    /* Prevent text selection */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    cursor: default;
+}
+
+.poem-prompt.visible { opacity: 1; }
+
+@keyframes prompt-fade {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.9; }
+}
+
+/* === BOOK WRAPPER (Closed Book) === */
+.book-wrapper {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+    opacity: 0;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.book-wrapper.visible {
+    opacity: 1;
+}
+
+.book-wrapper.dormant {
+    cursor: pointer;
+}
+
+.book-wrapper.dormant:hover {
+    transform: scale(1.06) rotateY(-3deg) rotateX(2deg);
+}
+
+.book-wrapper.dormant:active {
+    transform: scale(0.97);
+}
+
+.book-wrapper.awakening {
+    cursor: default;
+}
+
+/* === CLOSED BOOK SVG === */
+.closed-book-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 8px 24px rgba(200, 180, 220, 0.25));
+    animation: book-breathe 4s ease-in-out infinite;
+}
+
+@keyframes book-breathe {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+/* === BOOK ICON AWAKENING (exact copy of whisper's shake-blur timing/feel) === */
+/* Whisper uses: shake-blur 0.3s ease-out 3 with translate(50%,-50%) base */
+/* Book icon has no base translate, so we use same relative movement */
+.book-icon {
+    transition: all 0.3s ease;
+    transform-origin: center center;
+    transform-box: fill-box;
+}
+
+.book-icon.awakening {
+    animation: book-icon-shake-blur 0.3s ease-out 3;
+}
+
+@keyframes book-icon-shake-blur {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+        filter: blur(0);
+    }
+    25% {
+        transform: translate(2%, 0) scale(1.1);
+        filter: blur(1px);
+    }
+    75% {
+        transform: translate(-2%, 0) scale(1.1);
+        filter: blur(1px);
+    }
+}
+
+/* === RING GLOW (like seed) === */
+.book-ring-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.8s ease;
+    filter: blur(25px);
+    background: radial-gradient(circle, rgba(200, 180, 220, 0.15), transparent 70%);
+    z-index: -1;
+}
+
+/* === BOOK GLOW LAYERS (behind book) === */
+.book-glow-layer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.book-glow-core {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle,
+        rgba(255, 180, 120, 0.5) 0%,
+        transparent 70%
+    );
+    filter: blur(10px);
+}
+
+.book-glow-inner {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle,
+        rgba(200, 180, 220, 0.25) 0%,
+        transparent 70%
+    );
+    filter: blur(18px);
+}
+
+.book-glow-outer {
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle,
+        rgba(160, 140, 190, 0.1) 0%,
+        transparent 80%
+    );
+    filter: blur(30px);
+}
+
+.book-glow-atmosphere {
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle,
+        rgba(255, 80, 40, 0.06) 0%,
+        transparent 80%
+    );
+    filter: blur(40px);
+}
+
+/* === GLOW STATE: DORMANT (exactly like seed) === */
+.book-wrapper.dormant .book-glow-core,
+.book-wrapper.dormant .book-glow-inner,
+.book-wrapper.dormant .book-glow-outer,
+.book-wrapper.dormant .book-glow-atmosphere {
+    opacity: 0;
+}
+
+/* === GLOW STATE: AWAKENING (exactly like seed) === */
+.book-wrapper.awakening .book-glow-core {
+    opacity: 0.6;
+    animation: glow-pulse-core 3s ease-in-out infinite;
+}
+
+.book-wrapper.awakening .book-glow-inner {
+    opacity: 0.4;
+    animation: glow-pulse-inner 3.5s ease-in-out infinite;
+}
+
+.book-wrapper.awakening .book-glow-outer {
+    opacity: 0.3;
+    animation: glow-pulse-outer 4s ease-in-out infinite;
+}
+
+.book-wrapper.awakening .book-glow-atmosphere {
+    opacity: 0.2;
+    animation: glow-pulse-atmo 5s ease-in-out infinite;
+}
+
+.book-wrapper.awakening .book-ring-glow {
+    opacity: 1;
+    animation: ring-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-core {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+}
+
+@keyframes glow-pulse-inner {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.25; }
+    50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.4; }
+}
+
+@keyframes glow-pulse-outer {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
+    50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.25; }
+}
+
+@keyframes glow-pulse-atmo {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.1; }
+    50% { transform: translate(-50%, -50%) scale(1.03); opacity: 0.15; }
+}
+
+/* === SOFT SHOCKWAVE (faint misty tidal wave) === */
+.soft-shockwave {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle,
+        rgba(255, 200, 160, 0.15) 0%,
+        rgba(255, 160, 120, 0.08) 40%,
+        transparent 70%
+    );
+    animation: soft-wave-expand 1s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+@keyframes soft-wave-expand {
+    0% { width: 40px; height: 40px; opacity: 0.4; }
+    100% { width: 300px; height: 300px; opacity: 0; }
+}
+
+/* Dusty ember particles */
+.dust-ember {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    background: radial-gradient(circle,
+        rgba(255, 180, 140, 0.7) 0%,
+        rgba(200, 180, 220, 0.4) 60%,
+        transparent 100%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(255, 150, 100, 0.5);
+}
+
+.dust-ember-white {
+    position: fixed;
+    width: 3px;
+    height: 3px;
+    background: radial-gradient(circle,
+        rgba(255, 250, 255, 0.8) 0%,
+        rgba(255, 220, 190, 0.5) 60%,
+        transparent 100%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 5px rgba(255, 240, 220, 0.6);
+}
+
+/* Background embers */
+.background-ember {
+    position: fixed;
+    width: 5px;
+    height: 5px;
+    background: radial-gradient(circle,
+        rgba(255, 180, 140, 0.6) 0%,
+        rgba(200, 180, 220, 0.3) 60%,
+        transparent 100%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(255, 150, 100, 0.4);
+}
+
+.background-ember-white {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    background: radial-gradient(circle,
+        rgba(255, 250, 240, 0.7) 0%,
+        rgba(255, 230, 200, 0.4) 60%,
+        transparent 100%
+    );
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 6px rgba(255, 245, 230, 0.5);
+}
+
+/* === RADIAL BURST EFFECT === */
+.radial-burst {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.burst-ring {
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(255, 200, 160, 0.7);
+    background: radial-gradient(circle, rgba(255, 180, 120, 0.15) 0%, transparent 70%);
+}
+
+.burst-glow {
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle,
+        rgba(255, 180, 120, 0.4) 0%,
+        rgba(200, 180, 220, 0.2) 40%,
+        transparent 70%);
+    filter: blur(8px);
+}
+
+.burst-ember {
+    position: fixed;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99;
+}
+
+.burst-ember.warm {
+    background: radial-gradient(circle, rgba(200, 180, 220, 0.9) 0%, rgba(160, 140, 190, 0.6) 50%, transparent 70%);
+    box-shadow: 0 0 8px rgba(200, 180, 220, 0.8);
+}
+
+.burst-ember.light {
+    background: radial-gradient(circle, rgba(255, 250, 255, 0.9) 0%, rgba(255, 220, 180, 0.7) 50%, transparent 70%);
+    box-shadow: 0 0 10px rgba(255, 250, 255, 0.9), 0 0 4px rgba(200, 180, 220, 0.6);
+}
+
+/* === OPEN BOOK WRAPPER === */
+.open-book-wrapper {
+    position: relative;
+    transform-style: preserve-3d;
+    perspective: 1200px;
+    z-index: 10;
+    pointer-events: none; /* Pass through - let 3D children handle events */
+}
+
+/* === OPEN BOOK === */
+.open-book {
+    display: flex;
+    width: 680px;
+    height: 440px;
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease-out;
+    pointer-events: none; /* Pass through to pages */
+}
+
+/* === PAGE STYLES === */
+.book-page {
+    position: relative;
+    flex: 1;
+    background: var(--paper-cream);
+    overflow: hidden;
+    pointer-events: auto; /* Pages receive events regardless of 3D position */
+    user-select: none; /* Prevent text selection during drag interactions */
+    -webkit-user-select: none;
+    /* Flatten content out of 3D space to prevent text jitter during tilt */
+    transform-style: flat;
+    -webkit-transform-style: flat;
+}
+
+.book-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.page-left {
+    border-radius: 8px 0 0 8px;
+    background: linear-gradient(90deg,
+        rgba(0,0,0,0.08) 0%,
+        var(--paper-cream) 3%,
+        var(--paper-cream) 95%,
+        var(--paper-shadow) 100%
+    );
+    box-shadow:
+        inset 3px 0 8px rgba(0,0,0,0.1),
+        -4px 0 12px rgba(0,0,0,0.2);
+    transform-style: preserve-3d;
+    transform-origin: right center;
+}
+
+/* === SWIPE HANDLE (interactive grabbable element) === */
+.swipe-handle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 100px;
+    background: linear-gradient(90deg,
+        rgba(160, 140, 180, 0.3) 0%,
+        rgba(160, 140, 180, 0.15) 60%,
+        transparent 100%
+    );
+    border-radius: 0 8px 8px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.2s ease;
+    z-index: 10;
+    pointer-events: none; /* Only enabled when has content */
+    cursor: grab;
+}
+
+.swipe-handle:active {
+    cursor: grabbing;
+}
+
+/* Only show and enable handle when there's content to send */
+.page-left.has-content .swipe-handle {
+    opacity: 0.7;
+    pointer-events: auto;
+}
+
+.page-left.has-content .swipe-handle:hover {
+    opacity: 1;
+    background: linear-gradient(90deg,
+        rgba(160, 140, 180, 0.45) 0%,
+        rgba(160, 140, 180, 0.25) 60%,
+        transparent 100%
+    );
+}
+
+/* Shimmer effect */
+.swipe-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 50px;
+    background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(220, 200, 240, 0.5) 30%,
+        rgba(220, 200, 240, 0.6) 50%,
+        rgba(220, 200, 240, 0.5) 70%,
+        transparent 100%
+    );
+    border-radius: 2px;
+    animation: handle-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes handle-shimmer {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+/* === LEFT PAGE - Default cursor === */
+.page-left {
+    cursor: default;
+}
+
+/* NO grab cursor on page itself - only on handle */
+
+.page-right {
+    border-radius: 0 8px 8px 0;
+    background: linear-gradient(-90deg,
+        rgba(0,0,0,0.06) 0%,
+        var(--paper-cream) 3%,
+        var(--paper-cream) 95%,
+        var(--paper-shadow) 100%
+    );
+    box-shadow:
+        inset -3px 0 8px rgba(0,0,0,0.08),
+        4px 0 12px rgba(0,0,0,0.15);
+}
+
+/* === BOOK SPINE === */
+.book-spine {
+    width: 16px;
+    background: linear-gradient(90deg,
+        #c4a882 0%,
+        #e8d4f0 20%,
+        #bfa478 50%,
+        #e8d4f0 80%,
+        #c4a882 100%
+    );
+    box-shadow:
+        inset 0 0 10px rgba(0,0,0,0.3),
+        0 0 8px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.book-spine::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    left: 50%;
+    width: 2px;
+    background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(0,0,0,0.15) 20%,
+        rgba(0,0,0,0.2) 50%,
+        rgba(0,0,0,0.15) 80%,
+        transparent 100%
+    );
+    transform: translateX(-50%);
+}
+
+/* === WRITING AREA === */
+.writing-area {
+    position: absolute;
+    top: 40px;
+    left: 35px;
+    right: 25px;
+    bottom: 40px;
+    overflow: hidden;
+    /* Isolate from parent 3D transforms - prevents text jitter during tilt */
+    transform-style: flat;
+    -webkit-transform-style: flat;
+    transform: translateZ(0); /* Creates containing block and GPU layer */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.page-right .writing-area {
+    left: 25px;
+    right: 35px;
+}
+
+/* === INK DISPLAY === */
+.ink-display {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.15rem;
+    line-height: 1.9;
+    color: var(--ink-wet);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    pointer-events: none; /* Allow clicks to pass through to page for focus/drag */
+    backface-visibility: hidden; /* Stabilize rendering during 3D transforms */
+    -webkit-backface-visibility: hidden;
+    will-change: contents; /* Hint to browser for text content changes */
+}
+
+/* Individual letter spans for ink effect */
+.ink-letter {
+    display: inline;
+    transition: color 2s ease-out, text-shadow 1.5s ease-out, filter 1s ease-out;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.ink-letter.wet {
+    color: var(--ink-wet);
+    text-shadow: 0 0 1px rgba(45, 28, 20, 0.3);
+    filter: url(#ink-bleed);
+}
+
+.ink-letter.drying {
+    color: var(--ink-drying);
+    text-shadow: none;
+    filter: none;
+}
+
+.ink-letter.dry {
+    color: var(--ink-dry);
+    text-shadow: none;
+    filter: none;
+}
+
+/* Typing speed weight variation */
+.ink-letter.fast {
+    font-weight: 300;
+}
+
+.ink-letter.normal {
+    font-weight: 400;
+}
+
+.ink-letter.slow {
+    font-weight: 500;
+}
+
+/* Cursor - hidden by default, visible when textarea is focused */
+.ink-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background: var(--ink-wet);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    opacity: 0;
+    animation: none;
+}
+
+/* Show cursor only when book has cursor-visible class (set on focus) */
+.open-book.cursor-visible .ink-cursor {
+    opacity: 1;
+    animation: cursor-blink 1.1s ease-in-out infinite;
+}
+
+/* Frozen cursor: visible but not blinking (during help modal) */
+.open-book.cursor-frozen .ink-cursor {
+    opacity: 1;
+    animation: none;
+}
+
+@keyframes cursor-blink {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* === HIDDEN TEXTAREA === */
+.hidden-poem-input {
+    position: fixed;
+    left: -9999px;
+    opacity: 0;
+    font-size: 16px; /* Prevent iOS auto-zoom on focus */
+}
+
+/* === MOBILE KEYBOARD SCROLL-LOCK === */
+/* When keyboard is active, lock everything to prevent scroll/bounce */
+html.keyboard-active,
+body.keyboard-active {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    overscroll-behavior: none;
+}
+
+/* Scale book down when keyboard active to fit in remaining space */
+@media (max-width: 768px) {
+    body.keyboard-active .open-book-wrapper {
+        transform: scale(var(--keyboard-book-scale, 1));
+        transform-origin: center center;
+    }
+}
+
+/* === RIGHT PAGE DECORATION === */
+.right-page-decor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+/* === CHARACTER COUNT === */
+.char-count {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    font-size: 0.8rem;
+    color: rgba(92, 64, 51, 0.4);
+    letter-spacing: 1px;
+}
+
+/* === BOOK HELPER === */
+.book-helper {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    background: rgba(200, 180, 220, 0.15);
+    border: 1px solid rgba(200, 180, 220, 0.25);
+    border-radius: 50%;
+    color: #e8d4f0;
+    cursor: pointer;
+    transition: all 0.3s ease, bottom 0.3s ease;
+    z-index: 26;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateZ(0); /* force GPU layer - fixes click dead zones */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.book-helper.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.book-helper:hover {
+    background: rgba(200, 180, 220, 0.25);
+    border-color: rgba(200, 180, 220, 0.4);
+    box-shadow: 0 0 15px rgba(200, 180, 220, 0.3);
+}
+
+/* Blurping animation (same as whisper envelope) */
+.book-helper.blurping {
+    animation: blurp 0.4s ease-out 2;
+}
+
+/* Mobile sizing for helper (matches whisper envelope-helper) */
+@media (max-width: 768px) {
+    .book-helper {
+        bottom: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* === TRANSITIONAL BOOK (during send) === */
+.transitional-book {
+    filter: drop-shadow(0 4px 20px rgba(200, 180, 220, 0.4));
+}
+
+.transitional-book svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* === PENDING STATE === */
+.pending-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+.pending-wrapper.visible {
+    opacity: 1;
+}
+
+/* Breathing book icon for pending state - matches book-helper styling */
+.pending-book {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e8d4f0;
+    /* Match book-helper: filled circle with border */
+    background: rgba(200, 180, 220, 0.15);
+    border: 1px solid rgba(200, 180, 220, 0.25);
+    border-radius: 50%;
+    /* Misty glow layers - multiple soft shadows at different radii */
+    box-shadow:
+        0 0 20px rgba(200, 180, 220, 0.15),
+        0 0 40px rgba(200, 180, 220, 0.1),
+        0 0 60px rgba(200, 180, 220, 0.05);
+    transition: all 0.3s ease;
+}
+
+/* Hover effect - matches book-helper:hover exactly */
+.pending-book:hover {
+    background: rgba(200, 180, 220, 0.25);
+    border-color: rgba(200, 180, 220, 0.4);
+    box-shadow:
+        0 0 15px rgba(200, 180, 220, 0.3),
+        0 0 30px rgba(200, 180, 220, 0.2),
+        0 0 50px rgba(200, 180, 220, 0.1);
+}
+
+.pending-book svg {
+    width: 50px;
+    height: 50px;
+}
+
+/* Breathing animation - subtle scale pulse */
+.pending-book.breathing {
+    animation: pending-breathe 4s ease-in-out infinite;
+}
+
+@keyframes pending-breathe {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow:
+            0 0 20px rgba(200, 180, 220, 0.15),
+            0 0 40px rgba(200, 180, 220, 0.1),
+            0 0 60px rgba(200, 180, 220, 0.05);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow:
+            0 0 25px rgba(200, 180, 220, 0.2),
+            0 0 50px rgba(200, 180, 220, 0.15),
+            0 0 80px rgba(200, 180, 220, 0.08);
+    }
+}
+
+/* Orbiting light - traces the circle path endlessly */
+.pending-book::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(220, 200, 240, 0.7) 40%,
+        transparent 70%);
+    border-radius: 50%;
+    /* Position at top of circle (will rotate around center) */
+    top: -3px;
+    left: 50%;
+    margin-left: -3px;
+    /* Subtle glow on the light itself */
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+    /* Orbit animation - 7 seconds for calm, noticeable pace */
+    animation: orbit-light 7s linear infinite;
+    transform-origin: 3px 43px; /* center of the 80px circle */
+}
+
+@keyframes orbit-light {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.pending-text {
+    color: rgba(200, 180, 220, 0.8);
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    margin-top: 1.5rem;
+    user-select: none;
+    -webkit-user-select: none;
+    animation: text-glow 3s ease-in-out infinite;
+}
+
+@keyframes text-glow {
+    0%, 100% { text-shadow: 0 0 10px rgba(200, 180, 220, 0.3); }
+    50% { text-shadow: 0 0 15px rgba(200, 180, 220, 0.4); }
+}
+
+/* === MOBILE RESPONSIVE === */
+@media (max-width: 768px) {
+    .open-book {
+        width: 95vw;
+        max-width: 560px;
+        height: 320px;
+    }
+
+    .book-spine {
+        width: 10px;
+    }
+
+    .writing-area {
+        top: 18px;
+        left: 15px;
+        right: 12px;
+        bottom: 18px;
+    }
+
+    .page-right .writing-area {
+        left: 12px;
+        right: 15px;
+    }
+
+    .ink-display {
+        font-size: 0.9rem;
+        line-height: 1.65;
+    }
+
+    .book-wrapper {
+        width: 130px;
+        height: 130px;
+    }
+
+    .right-page-decor svg {
+        width: 120px;
+        height: 150px;
+    }
+
+    .char-count {
+        font-size: 0.7rem;
+        bottom: 6px;
+        right: 10px;
+    }
+
+    .poem-prompt {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .open-book {
+        width: 98vw;
+        height: 280px;
+    }
+
+    .ink-display {
+        font-size: 0.82rem;
+        line-height: 1.55;
+    }
+
+    .writing-area {
+        top: 14px;
+        left: 12px;
+        right: 10px;
+        bottom: 14px;
+    }
+
+    .right-page-decor {
+        opacity: 0.08;
+    }
+}

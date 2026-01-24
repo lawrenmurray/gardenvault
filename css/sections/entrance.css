@@ -1,0 +1,17 @@
+/* ========================================
+   ENTRANCE SECTION
+   Entrance flow screens and transitions
+   ======================================== */
+
+/* Entrance uses components from components.css:
+   - .message
+   - .input-wrapper
+   - .entry-field
+   - .choice-button
+   - .button-group
+   - .pen-icon
+   - .mist-glow
+*/
+
+/* No additional entrance-specific styles needed currently.
+   The entrance flow reuses the base components. */

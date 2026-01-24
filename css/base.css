@@ -1,0 +1,184 @@
+/* ========================================
+   BASE STYLES
+   Reset, body, typography, colors
+   ======================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-text-size-adjust: 100%;
+}
+
+html {
+    overscroll-behavior: none;
+}
+
+body {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(to bottom,
+        #1a0a1a 0%,
+        #2d1a3d 25%,
+        #3a2845 50%,
+        #4a3555 75%,
+        #5a4265 100%);
+    min-height: 100vh; /* fallback for older browsers */
+    min-height: 100svh; /* small viewport height - excludes mobile UI chrome */
+    min-height: 100dvh; /* dynamic viewport height - adjusts with address bar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #e8d4f0;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: none;
+}
+
+.container {
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    transform: translateZ(0); /* force GPU layer - fixes Chrome repaint issues */
+    /* 2025 Mobile Chrome fixes */
+    isolation: isolate; /* stacking context isolation - prevents bleed from other layers */
+}
+
+/* === VEIL & GARDEN (background layers) === */
+.veil {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #1a0a1a, #2d1a3d);
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 3s ease;
+    pointer-events: none;
+}
+
+.veil.lifting {
+    opacity: 0;
+}
+
+.garden {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, #2d1a3d, #3a2845, #2d1a3d);
+    opacity: 0;
+    transition: opacity 3s ease;
+    z-index: 0;
+}
+
+.garden.revealed {
+    opacity: 1;
+}
+
+.glow {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(ellipse at 50% 40%,
+        rgba(200, 170, 210, 0.18),
+        rgba(180, 150, 200, 0.08) 50%,
+        transparent 70%);
+    opacity: 0;
+    transition: all 4s ease;
+    border-radius: 50%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.glow.visible {
+    opacity: 1;
+    width: 800px;
+    height: 800px;
+}
+
+.welcome-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    color: #e8d4f0;
+    font-size: 2rem;
+    letter-spacing: 3px;
+    font-weight: 300;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    will-change: opacity, transform; /* prevent CLS on greeting opener */
+    backface-visibility: hidden; /* force GPU layer for stable positioning */
+    -webkit-backface-visibility: hidden;
+    /* 2025 Mobile Chrome fixes - prevent flicker deletion */
+    -webkit-perspective: 1000px; /* force GPU layer pinning */
+    perspective: 1000px;
+    isolation: isolate; /* stacking context isolation */
+    /* Desktop: prevent any wrapping */
+    white-space: nowrap;
+}
+
+.welcome-message.visible {
+    opacity: 1;
+}
+
+/* Mobile break - hidden on desktop, visible on mobile */
+.mobile-break {
+    display: none;
+}
+
+/* Prevent wrapping within a phrase */
+.nowrap {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .welcome-message {
+        font-size: 1.6rem;
+        letter-spacing: 2px;
+        white-space: normal; /* Allow wrapping at the <br> */
+    }
+
+    .mobile-break {
+        display: block;
+    }
+}
+
+/* === HIDDEN MEASUREMENT SPANS === */
+.measure-span {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre;
+    font-family: 'Georgia', serif;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    pointer-events: none;
+}
+
+.measure-span-whisper {
+    position: absolute;
+    visibility: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Georgia', serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+    padding: 16px 50px;
+    text-align: center;
+    pointer-events: none;
+}

@@ -1,0 +1,75 @@
+/* ========================================
+   MENU SECTION
+   Main menu styling
+   ======================================== */
+
+.menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+    width: 90%;
+    max-width: 400px;
+    pointer-events: none !important; /* CRITICAL: block clicks when hidden */
+    visibility: hidden; /* fully hide when not visible - prevents residue clicks */
+    /* 2025 Mobile Chrome fixes */
+    isolation: isolate; /* stacking context isolation - prevents bleed from other layers */
+    touch-action: pan-y; /* bypass pull-to-refresh gesture interception */
+}
+
+.menu.visible {
+    opacity: 1;
+    pointer-events: auto !important; /* force clickability on Mobile Chrome */
+    visibility: visible; /* restore visibility when shown */
+}
+
+.menu-option {
+    width: 100%;
+    padding: 22px 40px;
+    background: rgba(200, 180, 220, 0.08);
+    border: 1px solid rgba(220, 200, 240, 0.25);
+    border-radius: 15px;
+    color: #e8d4f0;
+    font-family: 'Georgia', serif;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 2px;
+    text-align: center;
+    animation: menu-breathe 4s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(200, 180, 220, 0.1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* 2025 Mobile Chrome fixes */
+    position: relative; /* ensure clickable above siblings */
+    z-index: 1; /* prevent dead zone from stacking context issues */
+    pointer-events: auto !important; /* force clickability - prevents zombie buttons */
+    touch-action: manipulation; /* bypass gesture interception on buttons */
+    transform: translateZ(0); /* force GPU layer */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.menu-option:nth-child(2) { animation-delay: 0.5s; }
+.menu-option:nth-child(3) { animation-delay: 1s; }
+
+.menu-option:hover {
+    background: rgba(200, 180, 220, 0.15);
+    border-color: rgba(220, 200, 240, 0.4);
+    transform: scale(1.03);
+}
+
+.menu-option:active {
+    transform: scale(1.1);
+    background: rgba(200, 180, 220, 0.2);
+}

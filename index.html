@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <title>Garden Vault</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="shortcut icon" href="/assets/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Garden" />
+    <link rel="manifest" href="/assets/site.webmanifest" />
+
+    <!-- Critical CSS: Inlined to prevent FOUC on greeting opener -->
+    <!-- Includes 2025 Mobile Chrome fixes for flicker deletion & stacking context isolation -->
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-text-size-adjust:100%}
+        html{overscroll-behavior:none}
+        body{font-family:'Georgia',serif;background:linear-gradient(to bottom,#1a0a1a,#2d1a3d,#3a2845);min-height:100vh;min-height:100svh;min-height:100dvh;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#e8d4f0;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+        .container{width:90%;max-width:600px;text-align:center;position:relative;z-index:10;transform:translateZ(0);isolation:isolate}
+        .message{font-size:1.4rem;letter-spacing:2px;opacity:0;transition:opacity 1.5s ease;margin-bottom:2rem;font-weight:300;will-change:opacity,transform;transform:translateZ(0);position:relative;-webkit-perspective:1000px;perspective:1000px;-webkit-backface-visibility:hidden;backface-visibility:hidden;isolation:isolate;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:default;contain:layout}
+        .message.visible{opacity:1}
+        .message.fading{opacity:0}
+        .veil{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,#1a0a1a,#2d1a3d);z-index:1;opacity:1;pointer-events:none}
+        .garden{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,#2d1a3d,#3a2845,#2d1a3d);opacity:0;z-index:0}
+        .glow{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(200,180,220,0.15),transparent);opacity:0;border-radius:50%;z-index:2;pointer-events:none}
+    </style>
+
+    <!-- Preload critical CSS files (needed for greeting/menu) -->
+    <!-- fetchpriority="high" is 2025 Chrome feature - strongest hint for immediate fetch -->
+    <link rel="preload" href="css/base.css" as="style" fetchpriority="high">
+    <link rel="preload" href="css/components.css" as="style" fetchpriority="high">
+    <link rel="preload" href="css/sections/entrance.css" as="style" fetchpriority="high">
+    <link rel="preload" href="css/sections/menu.css" as="style" fetchpriority="high">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+
+    <!-- Critical CSS (render-blocking - needed immediately) -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/sections/entrance.css">
+    <link rel="stylesheet" href="css/sections/menu.css">
+
+    <!-- Non-critical CSS (async load - not needed for initial greeting) -->
+    <link rel="stylesheet" href="css/animations.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/particles.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/sections/whisper.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/sections/poem.css" media="print" onload="this.media='all'">
+    <!-- Responsive MUST load last to override base styles with mobile sizes -->
+    <link rel="stylesheet" href="css/responsive.css" media="print" onload="this.media='all'">
+    <!-- Fallback for no-JS -->
+    <noscript>
+        <link rel="stylesheet" href="css/animations.css">
+        <link rel="stylesheet" href="css/particles.css">
+        <link rel="stylesheet" href="css/sections/whisper.css">
+        <link rel="stylesheet" href="css/sections/poem.css">
+        <link rel="stylesheet" href="css/responsive.css">
+    </noscript>
+</head>
+<body>
+    <!-- SVG Filters for Ink Effects -->
+    <svg class="svg-filters" style="position: absolute; width: 0; height: 0;">
+        <defs>
+            <filter id="ink-bleed" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+            </filter>
+            <filter id="ink-pool-blur">
+                <feGaussianBlur stdDeviation="1"/>
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Background layers -->
+    <div class="veil" id="veil"></div>
+    <div class="garden" id="garden"></div>
+    <div class="glow" id="glow"></div>
+
+    <!-- Welcome message (shown after authentication) -->
+    <div class="welcome-message" id="welcomeMessage"></div>
+
+    <!-- Main container for entrance flow content -->
+    <div class="container" id="container"></div>
+
+    <!-- Hidden measurement spans -->
+    <span class="measure-span" id="measureSpan"></span>
+    <span class="measure-span-whisper" id="measureSpanWhisper"></span>
+
+    <!-- JavaScript (order matters - dependencies first) -->
+    <script src="js/state.js"></script>
+    <script src="js/guardian.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/poemState.js"></script>
+    <script src="js/sections/entrance.js"></script>
+    <script src="js/sections/private.js"></script>
+    <script src="js/sections/menu.js"></script>
+    <script src="js/sections/whisper.js"></script>
+    <script src="js/sections/poem.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
